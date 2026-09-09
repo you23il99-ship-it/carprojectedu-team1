@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?><project-modules id="moduleCoreId" project-version="1.5.0">
+    <wb-module deploy-name="CarProjectEdu">
+        <wb-resource deploy-path="/" source-path="/src/main/webapp" tag="defaultRootSource"/>
+        <wb-resource deploy-path="/WEB-INF/classes" source-path="/src/main/java"/>
+        <dependent-module archiveName="tomcat-dbcp-7.0.30.jar" deploy-path="/WEB-INF/lib/" handle="module:/resource/tomcat-dbcp-7.0.30/tomcat-dbcp-7.0.30">
+            <dependency-type>uses</dependency-type>
+        </dependent-module>
+        <dependent-module archiveName="taglibs-standard-impl-1.2.5.jar" deploy-path="/WEB-INF/lib/" handle="module:/resource/taglibs-standard-impl-1.2.5/taglibs-standard-impl-1.2.5">
+            <dependency-type>uses</dependency-type>
+        </dependent-module>
+        <dependent-module archiveName="json-simple-1.1.1.jar" deploy-path="/WEB-INF/lib/" handle="module:/resource/json-simple-1.1.1/json-simple-1.1.1">
+            <dependency-type>uses</dependency-type>
+        </dependent-module>
+        <dependent-module archiveName="taglibs-standard-spec-1.2.5.jar" deploy-path="/WEB-INF/lib/" handle="module:/resource/taglibs-standard-spec-1.2.5/taglibs-standard-spec-1.2.5">
+            <dependency-type>uses</dependency-type>
+        </dependent-module>
+        <dependent-module archiveName="commons-io-2.6.jar" deploy-path="/WEB-INF/lib/" handle="module:/resource/commons-io-2.6/commons-io-2.6">
+            <dependency-type>uses</dependency-type>
+        </dependent-module>
+        <dependent-module archiveName="javax.websocket-api-1.1.jar" deploy-path="/WEB-INF/lib/" handle="module:/resource/javax.websocket-api-1.1/javax.websocket-api-1.1">
+            <dependency-type>uses</dependency-type>
+        </dependent-module>
+        <dependent-module archiveName="servlet-api.jar" deploy-path="/WEB-INF/lib/" handle="module:/resource/servlet-api/servlet-api">
+            <dependency-type>uses</dependency-type>
+        </dependent-module>
+        <dependent-module archiveName="commons-fileupload-1.3.3.jar" deploy-path="/WEB-INF/lib/" handle="module:/resource/commons-fileupload-1.3.3/commons-fileupload-1.3.3">
+            <dependency-type>uses</dependency-type>
+        </dependent-module>
+        <dependent-module archiveName="mysql-connector-java-8.0.25.jar" deploy-path="/WEB-INF/lib/" handle="module:/resource/mysql-connector-java-8.0.25/mysql-connector-java-8.0.25">
+            <dependency-type>uses</dependency-type>
+        </dependent-module>
+        <dependent-module archiveName="ojdbc6.jar" deploy-path="/WEB-INF/lib/" handle="module:/resource/ojdbc6/ojdbc6">
+            <dependency-type>uses</dependency-type>
+        </dependent-module>
+        <dependent-module archiveName="taglibs-standard-compat-1.2.5.jar" deploy-path="/WEB-INF/lib/" handle="module:/resource/taglibs-standard-compat-1.2.5/taglibs-standard-compat-1.2.5">
+            <dependency-type>uses</dependency-type>
+        </dependent-module>
+        <dependent-module archiveName="jsoup-1.15.3.jar" deploy-path="/WEB-INF/lib/" handle="module:/resource/jsoup-1.15.3/jsoup-1.15.3">
+            <dependency-type>uses</dependency-type>
+        </dependent-module>
+        <dependent-module archiveName="taglibs-standard-jstlel-1.2.5.jar" deploy-path="/WEB-INF/lib/" handle="module:/resource/taglibs-standard-jstlel-1.2.5/taglibs-standard-jstlel-1.2.5">
+            <dependency-type>uses</dependency-type>
+        </dependent-module>
+        <property name="context-root" value="CarProjectEdu"/>
+        <property name="java-output-path" value="/CarProjectEdu/build/classes"/>
+    </wb-module>
+</project-modules>
