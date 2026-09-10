@@ -1,221 +1,243 @@
 <%-- 이 페이지의 글자 인코딩을 UTF-8 로 정한다. 빠뜨리면 한글이 깨진다 --%>
 <%@ page language="java" contentType="text/html; charset=UTF-8"
     pageEncoding="UTF-8"%>
-<%-- JSTL 태그 사용을 위해 불러오는 코드 --%>
-<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
-<%-- [6단계 추가] fmt : 금액에 천단위 쉼표를 넣는 fmt:formatNumber 를 쓰기 위해 필요하다.
-     (선언하지 않으면 화면이 500 에러가 난다) --%>
-<%@ taglib uri="http://java.sun.com/jsp/jstl/fmt" prefix="fmt" %>
 <%
-    /* Java 코드: 한글 인코딩 설정 */
+    // (1) 한글 인코딩 설정. POST 파라미터 한글 깨짐 방지
     request.setCharacterEncoding("UTF-8");
-    /* Java 코드: 컨텍스트 경로 얻기 */
+
+    // (2) 컨텍스트 경로 얻기. 실제 주소를 위한 contextPath값
     String contextPath = request.getContextPath();
+
+    // (3) CSRF 토큰값 처리 (requestScope에서 가져옴, null체크 포함)
+    Object csrfObj = request.getAttribute("_csrf");
+    String csrf = csrfObj != null ? csrfObj.toString() : "";
+
+    // (4) 예약 정보 객체(vo) 읽기 (requestScope에서 가져옴)
+    Object voObj = request.getAttribute("vo");
+
+    // (5) 총 차량금액과 옵션금액 얻기 (requestScope에서 가져옴, null시 0)
+    Object totalreserveObj = request.getAttribute("totalreserve"); // 차량
+    Object totaloptionObj = request.getAttribute("totaloption");   // 옵션
+    int totalreserve = (totalreserveObj != null) ? Integer.parseInt(totalreserveObj.toString()) : 0;
+    int totaloption = (totaloptionObj != null) ? Integer.parseInt(totaloptionObj.toString()) : 0;
+
+    // (6) 차량명(이름) 파라미터 값 읽기
+    String carname = request.getParameter("carname");
+
+    // (7) vo에서 개별 예약항목 값 추출 (모두 null 또는 기본값 처리)
+    Integer carno = null;            // 차량번호
+    Integer carqty = null;           // 차량 수량
+    Integer carreserveday = null;    // 대여 일수
+    String carbegindate = "";        // 대여 시작일
+    Integer carins = null;           // 옵션: 자차보험
+    Integer carwifi = null;          // 옵션: 와이파이
+    Integer carnave = null;          // 옵션: 네비게이션
+    Integer carbabyseat = null;      // 옵션: 베이비시트
+
+    if (voObj != null) {
+        // Bean getter로 각 속성 값 추출
+        try {
+            java.lang.reflect.Method m;
+            // 차량번호 추출
+            m = voObj.getClass().getMethod("getCarno");
+            carno = (Integer)m.invoke(voObj);
+            // 차량수량 추출
+            m = voObj.getClass().getMethod("getCarqty");
+            carqty = (Integer)m.invoke(voObj);
+            // 대여일수 추출
+            m = voObj.getClass().getMethod("getCarreserveday");
+            carreserveday = (Integer)m.invoke(voObj);
+            // 대여 시작일자 추출
+            m = voObj.getClass().getMethod("getCarbegindate");
+            carbegindate = (String)m.invoke(voObj);
+            // 옵션: 자차보험 추출
+            m = voObj.getClass().getMethod("getCarins");
+            carins = (Integer)m.invoke(voObj);
+            // 옵션: 와이파이 추출
+            m = voObj.getClass().getMethod("getCarwifi");
+            carwifi = (Integer)m.invoke(voObj);
+            // 옵션: 네비게이션 추출
+            m = voObj.getClass().getMethod("getCarnave");
+            carnave = (Integer)m.invoke(voObj);
+            // 옵션: 베이비시트 추출
+            m = voObj.getClass().getMethod("getCarbabyseat");
+            carbabyseat = (Integer)m.invoke(voObj);
+        } catch(Exception e) {
+            // 에러 발생시 모든 값 기본값(숫자 0, 문자 "")
+            carno = carqty = carreserveday = carins = carwifi = carnave = carbabyseat = 0;
+            carbegindate = "";
+        }
+    }
+
+    // (8) 옵션 선택 되었는지 여부
+    boolean hasOption = false;
+
+    // (9) 숫자 1000단위 , 삽입 포맷팅 객체 생성
+    java.text.NumberFormat numfmt = java.text.NumberFormat.getInstance();
 %>
 <%--
  ================================================================================
    CarOrder.jsp (비회원 예약)  -  예약 최종 확인 및 요청 (예약 흐름 3단계)
    [6단계 전면 재작성]
-   (기존 화면의 문제)
-     문제1. 무엇을 예약하는지 확인할 수 없었다.
-            hidden 필드로 차번호/기간/옵션을 넘기기만 하고, 화면에는 금액 3줄만 보여줬다.
-                예약할 차량 기본 총 금액 : 135000원
-                예약할 차량 옵션 총 금액 : 30000원
-                총 비용 : 165000원
-            어떤 차를, 언제부터, 며칠, 몇 대, 어떤 옵션으로 빌리는지가 화면에 없었다.
-            결제 직전 화면인데 정작 확인할 내용이 없었던 것이다.
-     문제2. 금액에 천단위 쉼표가 없어 165000 을 한눈에 읽기 어려웠다.
-     문제3. 예약 확인용 비밀번호가 왜 필요한지 설명이 없었다.
-            이 비밀번호는 나중에 예약을 조회·변경·취소할 때 쓰는 값인데,
-            안내가 없으면 사용자는 대충 입력하고 잊어버린다.
-   (지금)
-     - 차량 사진 + 예약 내역(차량/시작일/기간/수량/선택옵션)을 표로 확인
-     - 금액을 천단위 쉼표로, 총액은 크게 강조
-     - 비밀번호가 어디에 쓰이는지 안내 문구 추가
-     - 모바일에서는 총액과 결제 버튼이 하단에 고정된다(app.css 의 .action-bar)
+   (기존 화면의 문제 설명 생략)
  ================================================================================
 --%>
 <div class="container">
-	<%-- section-head 모양을 입힐 영역. 실제 모양은 CSS 에서 정한다 --%>
-	<div class="section-head">
-		<%-- 글자 묶음 — CSS 로 모양을 입히는 용도 --%>
-		<span class="section-eyebrow">STEP 3 / 3</span>
-		<%-- 제목 --%>
-		<h2 class="section-heading">예약 확인</h2>
-		<%-- 문단 글 --%>
-		<p class="section-desc">아래 내용을 확인한 뒤 예약을 완료해 주세요</p>
-	</div>
-	<%-- 입력한 내용을 <%=contextPath%>/Car/CarOrder.do 주소로 POST 방식으로 보낸다 --%>
-	<form action="<%=contextPath%>/Car/CarOrder.do" method="post">
-		<%-- [보안] CSRF 토큰 : 이 화면에서 출발한 요청임을 증명한다 (설명은 members/login.jsp) --%>
-		<input type="hidden" name="_csrf" value="${_csrf}">
-		<%-- 앞 화면에서 계산된 예약 정보를 서버로 전달
-		     (금액은 보내지 않는다. 서버가 DB 요금으로 다시 계산해 확정한다) --%>
-		<input type="hidden" name="carno"          value="${requestScope.vo.carno}" />
-		<%-- 화면에는 안 보이지만 서버로 함께 보낼 carqty 값 --%>
-		<input type="hidden" name="carqty"         value="${requestScope.vo.carqty}" />
-		<%-- 화면에는 안 보이지만 서버로 함께 보낼 carreserveday 값 --%>
-		<input type="hidden" name="carreserveday"  value="${requestScope.vo.carreserveday}" />
-		<%-- 화면에는 안 보이지만 서버로 함께 보낼 carbegindate 값 --%>
-		<input type="hidden" name="carbegindate"   value="${requestScope.vo.carbegindate}" />
-		<%-- 화면에는 안 보이지만 서버로 함께 보낼 carins 값 --%>
-		<input type="hidden" name="carins"         value="${requestScope.vo.carins}" />
-		<%-- 화면에는 안 보이지만 서버로 함께 보낼 carwifi 값 --%>
-		<input type="hidden" name="carwifi"        value="${requestScope.vo.carwifi}" />
-		<%-- 화면에는 안 보이지만 서버로 함께 보낼 carnave 값 --%>
-		<input type="hidden" name="carnave"        value="${requestScope.vo.carnave}" />
-		<%-- 화면에는 안 보이지만 서버로 함께 보낼 carbabyseat 값 --%>
-		<input type="hidden" name="carbabyseat"    value="${requestScope.vo.carbabyseat}" />
-		<%-- grid-2 모양을 입힐 영역. 실제 모양은 CSS 에서 정한다 --%>
-		<div class="grid-2">
-			<%-- ================= 왼쪽 : 예약 내역 ================= --%>
-			<div>
-				<%-- 작은 제목 --%>
-				<h3 class="fw-bold mb-4">예약 내역</h3>
-				<%-- 이름-내용 짝 목록 --%>
-				<dl class="detail-list">
-					<%-- detail-row 모양을 입힐 영역. 실제 모양은 CSS 에서 정한다 --%>
-					<div class="detail-row">
-						<%-- 항목의 이름 --%>
-						<dt>차량</dt>
-						<%-- 항목의 내용 --%>
-						<dd>
-							<%-- 값을 안전하게 출력한다. 태그 문자를 글자로 바꿔줘 스크립트 공격을 막는다 --%>
-							<c:out value="${empty param.carname ? '선택한 차량' : param.carname}"/>
-						</dd>
-					</div>
-					<%-- detail-row 모양을 입힐 영역. 실제 모양은 CSS 에서 정한다 --%>
-					<div class="detail-row">
-						<%-- 항목의 이름 --%>
-						<dt>대여 시작일</dt>
-						<%-- 항목의 내용 --%>
-						<dd>${requestScope.vo.carbegindate}</dd>
-					</div>
-					<%-- detail-row 모양을 입힐 영역. 실제 모양은 CSS 에서 정한다 --%>
-					<div class="detail-row">
-						<%-- 항목의 이름 --%>
-						<dt>대여 기간</dt>
-						<%-- 항목의 내용 --%>
-						<dd>${requestScope.vo.carreserveday}일</dd>
-					</div>
-					<%-- detail-row 모양을 입힐 영역. 실제 모양은 CSS 에서 정한다 --%>
-					<div class="detail-row">
-						<%-- 항목의 이름 --%>
-						<dt>대여 수량</dt>
-						<%-- 항목의 내용 --%>
-						<dd>${requestScope.vo.carqty}대</dd>
-					</div>
-					<%-- detail-row 모양을 입힐 영역. 실제 모양은 CSS 에서 정한다 --%>
-					<div class="detail-row">
-						<%-- 항목의 이름 --%>
-						<dt>선택 옵션</dt>
-						<%-- 항목의 내용 --%>
-						<dd>
-							<%-- 선택한 옵션만 배지로 보여준다. 하나도 없으면 그 사실을 알려준다. --%>
-							<c:set var="hasOption" value="false"/>
-							<%-- 조건 ${requestScope.vo.carins == 1} 이 맞을 때만 아래를 화면에 그린다 --%>
-							<c:if test="${requestScope.vo.carins == 1}">
-								<%-- 글자 묶음 — CSS 로 모양을 입히는 용도 --%>
-								<span class="badge badge-brand">자차보험</span>
-								<%-- 화면에서만 쓸 임시 값 hasOption 을 만든다 --%>
-								<c:set var="hasOption" value="true"/>
-							</c:if>
-							<%-- 조건 ${requestScope.vo.carwifi == 1} 이 맞을 때만 아래를 화면에 그린다 --%>
-							<c:if test="${requestScope.vo.carwifi == 1}">
-								<%-- 글자 묶음 — CSS 로 모양을 입히는 용도 --%>
-								<span class="badge badge-brand">무선 WiFi</span>
-								<%-- 화면에서만 쓸 임시 값 hasOption 을 만든다 --%>
-								<c:set var="hasOption" value="true"/>
-							</c:if>
-							<%-- 조건 ${requestScope.vo.carnave == 1} 이 맞을 때만 아래를 화면에 그린다 --%>
-							<c:if test="${requestScope.vo.carnave == 1}">
-								<%-- 글자 묶음 — CSS 로 모양을 입히는 용도 --%>
-								<span class="badge badge-brand">네비게이션</span>
-								<%-- 화면에서만 쓸 임시 값 hasOption 을 만든다 --%>
-								<c:set var="hasOption" value="true"/>
-							</c:if>
-							<%-- 조건 ${requestScope.vo.carbabyseat == 1} 이 맞을 때만 아래를 화면에 그린다 --%>
-							<c:if test="${requestScope.vo.carbabyseat == 1}">
-								<%-- 글자 묶음 — CSS 로 모양을 입히는 용도 --%>
-								<span class="badge badge-brand">베이비시트</span>
-								<%-- 화면에서만 쓸 임시 값 hasOption 을 만든다 --%>
-								<c:set var="hasOption" value="true"/>
-							</c:if>
-							<%-- 조건 ${not hasOption} 이 맞을 때만 아래를 화면에 그린다 --%>
-							<c:if test="${not hasOption}">
-								<%-- 글자 묶음 — CSS 로 모양을 입히는 용도 --%>
-								<span class="text-muted fs-sm">선택한 옵션 없음</span>
-							</c:if>
-						</dd>
-					</div>
-				</dl>
-			</div>
-			<%-- ================= 오른쪽 : 금액 + 예약자 정보 ================= --%>
-			<div>
-				<%-- 작은 제목 --%>
-				<h3 class="fw-bold mb-4">결제 금액</h3>
-				<%-- 이름-내용 짝 목록 --%>
-				<dl class="detail-list mb-6">
-					<%-- detail-row 모양을 입힐 영역. 실제 모양은 CSS 에서 정한다 --%>
-					<div class="detail-row">
-						<%-- 항목의 이름 --%>
-						<dt>차량 요금</dt>
-						<%-- Controller 가 보낸 requestScope 에서 totalreserve 값을 꺼내 화면에 찍는다 --%>
-						<dd><fmt:formatNumber value="${requestScope.totalreserve}" pattern="#,###"/>원</dd>
-					</div>
-					<%-- detail-row 모양을 입힐 영역. 실제 모양은 CSS 에서 정한다 --%>
-					<div class="detail-row">
-						<%-- 항목의 이름 --%>
-						<dt>옵션 요금</dt>
-						<%-- Controller 가 보낸 requestScope 에서 totaloption 값을 꺼내 화면에 찍는다 --%>
-						<dd><fmt:formatNumber value="${requestScope.totaloption}" pattern="#,###"/>원</dd>
-					</div>
-				</dl>
-				<%-- 작은 제목 --%>
-				<h3 class="fw-bold mb-4">예약 확인용 정보</h3>
-				<%-- form-group 모양을 입힐 영역. 실제 모양은 CSS 에서 정한다 --%>
-				<div class="form-group">
-					<%-- 입력칸에 붙는 이름표 --%>
-					<label class="form-label" for="memberphone">연락처 <span class="required">*</span></label>
-					<%-- memberphone 입력칸. 서버에서 request.getParameter("memberphone") 로 받는다 --%>
-					<input class="form-control" type="tel" id="memberphone" name="memberphone"
-						   placeholder="010-1234-5678" required>
-				</div>
-				<%-- form-group 모양을 입힐 영역. 실제 모양은 CSS 에서 정한다 --%>
-				<div class="form-group">
-					<%-- 입력칸에 붙는 이름표 --%>
-					<label class="form-label" for="memberpass">예약 비밀번호 <span class="required">*</span></label>
-					<%-- memberpass 입력칸. 서버에서 request.getParameter("memberpass") 로 받는다 --%>
-					<input class="form-control" type="password" id="memberpass" name="memberpass"
-						   placeholder="예약 조회·취소에 사용됩니다" required>
-					<%-- 이 비밀번호의 용도를 반드시 알려준다. 모르면 나중에 예약을 못 찾는다. --%>
-					<p class="form-hint">
-						&#8226; 이 연락처와 비밀번호로 <strong>예약 조회 · 변경 · 취소</strong>를 합니다.<br>
-						&#8226; 꼭 기억해 주세요. 분실 시 고객센터(02-3456-6574)로 문의해야 합니다.
-					</p>
-				</div>
-			</div>
-		</div>
-		<%-- 총액 + 결제 버튼 : 모바일에서는 화면 하단에 고정된다 --%>
-		<div class="action-bar mt-6">
-			<%-- action-total 모양을 입힐 영역. 실제 모양은 CSS 에서 정한다 --%>
-			<div class="action-total">
-				<%-- label 모양을 입힐 영역. 실제 모양은 CSS 에서 정한다 --%>
-				<div class="label">총 결제금액 (${requestScope.vo.carreserveday}일 · ${requestScope.vo.carqty}대)</div>
-				<%-- price 모양을 입힐 영역. 실제 모양은 CSS 에서 정한다 --%>
-				<div class="price">
-					<fmt:formatNumber value="${totalreserve + totaloption}" pattern="#,###"/>원
-				</div>
-			</div>
-			<%-- 누르면 동작하는 버튼 --%>
-			<button type="submit" class="btn btn-primary btn-lg">예약 완료하기</button>
-		</div>
-		<%-- flex flex-wrap gap-2 mt-4 모양을 입힐 영역. 실제 모양은 CSS 에서 정한다 --%>
-		<div class="flex flex-wrap gap-2 mt-4">
-			<%-- 다른 화면으로 넘어가는 링크 --%>
-			<a class="btn btn-ghost" href="<%=contextPath%>/Car/CarList.do">&lsaquo; 차량 다시 선택</a>
-		</div>
-	</form>
+    <!-- 단계 안내 영역 -->
+    <div class="section-head">
+        <span class="section-eyebrow">STEP 3 / 3</span>
+        <h2 class="section-heading">예약 확인</h2>
+        <p class="section-desc">아래 내용을 확인한 뒤 예약을 완료해 주세요</p>
+    </div>
+    <form action="<%=contextPath%>/Car/CarOrder.do" method="post">
+        <!-- CSRF 토큰 전달 (서버에서 인증용) -->
+        <input type="hidden" name="_csrf" value="<%= csrf %>">
+        <!-- 예약 정보 hidden 필드 전달 (화면엔 안보이나 서버로 전송해야 함) -->
+        <input type="hidden" name="carno" value="<%= (carno != null) ? carno : "" %>" />
+        <input type="hidden" name="carqty" value="<%= (carqty != null) ? carqty : "" %>" />
+        <input type="hidden" name="carreserveday" value="<%= (carreserveday != null) ? carreserveday : "" %>" />
+        <input type="hidden" name="carbegindate" value="<%= carbegindate %>" />
+        <input type="hidden" name="carins" value="<%= (carins != null) ? carins : "" %>" />
+        <input type="hidden" name="carwifi" value="<%= (carwifi != null) ? carwifi : "" %>" />
+        <input type="hidden" name="carnave" value="<%= (carnave != null) ? carnave : "" %>" />
+        <input type="hidden" name="carbabyseat" value="<%= (carbabyseat != null) ? carbabyseat : "" %>" />
+        <div class="grid-2">
+            <!-- 왼쪽 예약 내역 -->
+            <div>
+                <h3 class="fw-bold mb-4">예약 내역</h3>
+                <dl class="detail-list">
+                    <!-- 차량명 출력 (XSS 방지로 태그 무효화) -->
+                    <div class="detail-row">
+                        <dt>차량</dt>
+                        <dd>
+                            <%
+                                // 차량명이 없으면 "선택한 차량"으로 대체, HTML 이스케이프 처리
+                                String safeCarname;
+                                if (carname == null || carname.trim().length() == 0) {
+                                    safeCarname = "선택한 차량";
+                                } else {
+                                    safeCarname = carname.replaceAll("&","&amp;")
+                                                         .replaceAll("<","&lt;")
+                                                         .replaceAll(">","&gt;")
+                                                         .replaceAll("\"", "&quot;")
+                                                         .replaceAll("\'","&#39;");
+                                }
+                            %>
+                            <%= safeCarname %>
+                        </dd>
+                    </div>
+                    <!-- 대여 시작일 표시 -->
+                    <div class="detail-row">
+                        <dt>대여 시작일</dt>
+                        <dd><%= carbegindate %></dd>
+                    </div>
+                    <!-- 대여 기간 -->
+                    <div class="detail-row">
+                        <dt>대여 기간</dt>
+                        <dd><%= (carreserveday != null ? carreserveday : "") %>일</dd>
+                    </div>
+                    <!-- 차량 수량 -->
+                    <div class="detail-row">
+                        <dt>대여 수량</dt>
+                        <dd><%= (carqty != null ? carqty : "") %>대</dd>
+                    </div>
+                    <!-- 옵션 배지로 표시, 없으면 없음 문구 출력 -->
+                    <div class="detail-row">
+                        <dt>선택 옵션</dt>
+                        <dd>
+                            <%
+                                // 옵션이 하나라도 있으면 hasOption = true
+                                hasOption = false;
+                                if (carins != null && carins == 1) {
+                            %>
+                                <span class="badge badge-brand">자차보험</span>
+                            <%
+                                    hasOption = true;
+                                }
+                                if (carwifi != null && carwifi == 1) {
+                            %>
+                                <span class="badge badge-brand">무선 WiFi</span>
+                            <%
+                                    hasOption = true;
+                                }
+                                if (carnave != null && carnave == 1) {
+                            %>
+                                <span class="badge badge-brand">네비게이션</span>
+                            <%
+                                    hasOption = true;
+                                }
+                                if (carbabyseat != null && carbabyseat == 1) {
+                            %>
+                                <span class="badge badge-brand">베이비시트</span>
+                            <%
+                                    hasOption = true;
+                                }
+                                if (!hasOption) {
+                            %>
+                                <span class="text-muted fs-sm">선택한 옵션 없음</span>
+                            <%
+                                }
+                            %>
+                        </dd>
+                    </div>
+                </dl>
+            </div>
+            <!-- 오른쪽 결제금액 + 예약확인정보 -->
+            <div>
+                <h3 class="fw-bold mb-4">결제 금액</h3>
+                <dl class="detail-list mb-6">
+                    <div class="detail-row">
+                        <dt>차량 요금</dt>
+                        <dd>
+                            <%= numfmt.format(totalreserve) %>원
+                        </dd>
+                    </div>
+                    <div class="detail-row">
+                        <dt>옵션 요금</dt>
+                        <dd>
+                            <%= numfmt.format(totaloption) %>원
+                        </dd>
+                    </div>
+                </dl>
+                <h3 class="fw-bold mb-4">예약 확인용 정보</h3>
+                <div class="form-group">
+                    <!-- 연락처 입력란 (필수) -->
+                    <label class="form-label" for="memberphone">연락처 <span class="required">*</span></label>
+                    <input class="form-control" type="tel" id="memberphone" name="memberphone"
+                           placeholder="010-1234-5678" required>
+                </div>
+                <div class="form-group">
+                    <!-- 예약 비밀번호 입력란 (필수) -->
+                    <label class="form-label" for="memberpass">예약 비밀번호 <span class="required">*</span></label>
+                    <input class="form-control" type="password" id="memberpass" name="memberpass"
+                           placeholder="예약 조회·취소에 사용됩니다" required>
+                    <!-- 안내 문구 -->
+                    <p class="form-hint">
+                        &#8226; 이 연락처와 비밀번호로 <strong>예약 조회 · 변경 · 취소</strong>를 합니다.<br>
+                        &#8226; 꼭 기억해 주세요. 분실 시 고객센터(02-3456-6574)로 문의해야 합니다.
+                    </p>
+                </div>
+            </div>
+        </div>
+        <!-- 하단 결제총액/버튼 영역 -->
+        <div class="action-bar mt-6">
+            <div class="action-total">
+                <div class="label">
+                    총 결제금액 (
+                        <%= (carreserveday != null) ? carreserveday : "" %>일 ·
+                        <%= (carqty != null) ? carqty : "" %>대
+                    )
+                </div>
+                <div class="price">
+                    <%= numfmt.format(totalreserve + totaloption) %>원
+                </div>
+            </div>
+            <!-- 결제 완료 버튼 -->
+            <button type="submit" class="btn btn-primary btn-lg">예약 완료하기</button>
+        </div>
+        <!-- 차량 목록 돌아가기 버튼 -->
+        <div class="flex flex-wrap gap-2 mt-4">
+            <a class="btn btn-ghost" href="<%=contextPath%>/Car/CarList.do">&lsaquo; 차량 다시 선택</a>
+        </div>
+    </form>
 </div>
-
-

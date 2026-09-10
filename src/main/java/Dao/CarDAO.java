@@ -165,10 +165,6 @@ public class CarDAO {
 		return list;
 	}
 
-	//===========================================================
-	// 3. 차량 1대 조회 (상세보기 / 금액 계산용)
-	//    반환 : CarListVo,  없으면 null
-	//===========================================================
 	public CarListVo selectOneCar(Connection con, int carno) throws SQLException {
 
 		// 기본키(carno)로 찾으므로 결과는 0건 아니면 1건이다
