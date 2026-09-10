@@ -312,13 +312,6 @@ public class CarService {
 
 		return DBCPUtil.execute(con -> {   // 연결을 빌려 검증·재계산·수정을 한 흐름으로 처리한다
 
-			/*
-			 1) [필수] 비밀번호를 먼저 검증한다.
-
-			    기존에는 DAO 의 where 절(memberpass=?)이 검증을 대신했다.
-			    해시는 = 비교가 불가능하므로 여기서 matches() 로 확인한다.
-			    통과하지 못하면 0을 반환해 "비밀번호가 틀렸다"로 처리된다.
-			*/
 			if (!matchesOrderPassword(con, vo.getOrderid(), vo.getMemberpass())) {
 				System.out.println("[CarService] 예약 수정 거부 - 비밀번호 불일치. 예약번호=" + vo.getOrderid());
 				return Integer.valueOf(0);   // 0 을 돌려주면 컨트롤러가 "비밀번호가 틀렸다" 로 안내한다
@@ -340,23 +333,10 @@ public class CarService {
 		}).intValue();   // Integer 상자에서 진짜 숫자를 꺼낸다
 	}
 
-	//===========================================================
-	// 7. 예약 취소
-	//    반환 : 삭제된 행 수 (0이면 예약번호 또는 비밀번호가 틀림)
-	//===========================================================
 	public int deleteOrder(int orderid, String memberpass) {
 
 		return DBCPUtil.execute(con -> {   // 연결을 빌려 검증과 삭제를 한 흐름으로 처리한다
 
-			/*
-			 [필수] 삭제 전에 비밀번호를 검증한다.
-
-			   기존에는 DAO 의 where 절(memberpass=?)이 검증을 대신했다.
-			   해시는 = 비교가 불가능하므로 여기서 matches() 로 확인한다.
-
-			   예약 취소는 되돌릴 수 없는 작업이므로 검증이 특히 중요하다.
-			   통과하지 못하면 삭제를 실행하지 않고 0을 반환한다.
-			*/
 			if (!matchesOrderPassword(con, orderid, memberpass)) {
 				System.out.println("[CarService] 예약 취소 거부 - 비밀번호 불일치. 예약번호=" + orderid);
 				return Integer.valueOf(0);   // 삭제를 실행하지 않고 0 을 돌려준다

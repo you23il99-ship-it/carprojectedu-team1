@@ -287,26 +287,14 @@ public class CarDAO {
 		// 결과를 담을 빈 목록
 		List<CarConfirmVo> list = new ArrayList<CarConfirmVo>();
 
-		/*
-		 [변경] NATURAL JOIN -> 명시적 JOIN
-
-		   조인 조건(o.carno = c.carno)이 코드에 드러나므로
-		   나중에 컬럼이 추가돼도 조회 결과가 바뀌지 않는다.
-
-		 [변경] str_to_date(carbegindate, '%Y-%m-%d') -> carbegindate 직접 비교
-		   carbegindate 컬럼을 DATE 타입으로 만들었으므로 변환 함수가 필요 없다.
-		   컬럼에 함수를 씌우면 인덱스를 사용할 수 없어 데이터가 늘수록 느려진다.
-		*/
-		// o 와 c 는 테이블에 붙인 별명(alias)이다. o=non_carorder, c=carlist.
-		// 별명을 쓰면 어느 테이블의 컬럼인지 한눈에 보인다.
 		String sql = "select o.non_orderid, o.carno, o.carqty, o.carreserveday, o.carbegindate,"
 				   + "       o.carins, o.carwifi, o.carnave, o.carbabyseat,"
 				   + "       o.memberphone, o.memberpass, o.total_price,"
 				   // 예약 테이블에는 차 이름이 없으므로 carlist 에서 함께 가져온다
 				   + "       c.carname, c.carimg, c.carprice"
-				   + "  from non_carorder o"
-				   // join = 두 테이블을 이어 붙인다. on 뒤가 "무엇을 기준으로 잇는가" 이다.
-				   + "  join carlist c on o.carno = c.carno"
+				   + "  from non_carorder o  join carlist c "
+				   
+				   + "  on o.carno = c.carno"
 				   // current_date() = 오늘 날짜. 오늘보다 나중에 시작하는 예약만 보여 준다.
 				   + " where o.carbegindate > current_date()"
 				   + "   and o.memberphone = ?"
