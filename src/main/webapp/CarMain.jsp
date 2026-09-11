@@ -110,16 +110,12 @@
  <c:set var="center" value="${requestScope.center}" />
  
  <%-- 처음으로 CarMain.jsp메인 화면을 요청 했을때 중앙화면은 Center.jsp로 보이게 설정 --%>
- <c:if test="${center == null}">
+ 
  	<%-- 화면에서만 쓸 임시 값 center 을 만든다 --%>
- 	<c:set var="center" value="Center.jsp" />
- 	<%//2.3. 예약 아이디를 이요해 조회된 예약 정보를 보여줄 중앙화면 VIEW("CarConfirmUpdate.jsp")주소 request에 바인딩
-			request.setAttribute("center", "CarConfirmUpdate.jsp");
-			
-			//2.4.    2.2.에서 조회된 예약한 정보(CarConfirmVo)를 중앙 VIEW에 보여주기 위해 request에 바인딩
-			request.setAttribute("vo", carConfirmVo);
-			  %>
- </c:if>
+
+<c:if test="${center == null}">
+    <c:set var="center" value="Center.jsp" />
+</c:if>
 <%-- 반응형 전체 감싸는 영역 (table 레이아웃 → div 레이아웃으로 변환) --%>
 <div class="main-wrapper">
     <%-- 상단 헤더/네비게이션 영역 --%>

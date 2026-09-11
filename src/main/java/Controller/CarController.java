@@ -28,72 +28,26 @@ import Vo.CarListVo;   // 값을 담아 나르는 상자(VO) 클래스
 import Vo.CarOrderVO;   // 값을 담아 나르는 상자(VO) 클래스
 import util.ParamUtil;   // 여러 곳에서 함께 쓰는 도우미 클래스
 
-/*
-	MVC 디자인 패턴 개발 방법 중에 C역할을 하는 CarController서블릿 클래스.
 
-	1. Top.jsp 페이지에서  <a href="/CarProject/Car/bb?center=CarReservation.jsp">예약하기</a>링크를 클릭했을때 요청을 받아 처리하는 서블릿 
-   
-    2. CarReservation.jsp 페이지에서 <input type="button" value="전체검색" 
-								        onclick="location.href='<%=contextPath%>/Car/CarList.do'">을 클릭해서
-								        전체 차량 검색 요청을 받아 처리하는 서블릿 
-								        
-	3. CarList.jsp 페이지에서 차량 유형별 검색 하기 위해  소형(Small), 중형(Mid), 대형(Big)중 선택한 유형의 차량 검색 요청을 받아 처리하는 서블릿
-	
-	소형을 선택하고 검색요청 버튼을 클릭하면?
-		/Car/carcategory.do?carcategory=Small
-		 
-	중형을 선택하고 검색요청 버튼을 클릭하면?
-		/Car/carcategory.do?carcategory=Mid
+//            /Car/CarInfo.do?carno=${vo.carno}
 
-	대형을 선택하고 검색요청 버튼을 클릭하면?
-		/Car/carcategory.do?carcategory=Big
+//            /Car/CarOption.do
 
-	4. CarList.jsp 중앙 화면에서 검색된 차량 하나의 정보를 보기 위해 아래의  a링크를 클릭해서  차량 한대 정보를 검색 요청을 하면 받는 서블릿 
-	
-	<a href="${contextPath}/Car/CarInfo.do?carno=${vo.carno}">
-		<img src="${contextPath}/img/${vo.carimg}" width="220" height="180"/><br>
-		차량명 : ${vo.carname}<br>
-		한대당 렌트 가격 : ${vo.carprice}
-	</a>
-	
-	5. CarInfo.jsp 중앙화면에서 검색된 차량 하나의 정보를 보고~  추가 옵션을 선택하는 화면 요청을 받은 서블릿
-	
-	 <%-- 조회된 차량 정보를 화면에서 보고 대여수량을 선택해 옵션을 추가로 선택하는 화면 요청 --%>
-		<form action="<%=contextPath%>/Car/CarOption.do" method="post">
-			
-			<%--옵션 선택 하는 페이지 요청시 조회된 예약할 차번호, 차이미지명, 대여금액 같이 전달 --%>
-			<input type="hidden" name="carno" value="${requestScope.vo.carno}" >
-			<input type="hidden" name="carimg" value="${requestScope.vo.carimg}" >
-			<input type="hidden" name="carprice" value="${requestScope.vo.carprice}" >
-			
-			<tr>
-				<td align="center" width="200">대여 수량</td>
-				<td align="center" width="200">
-					<select name="carqty">
-						<option value="1">1대</option>
-						<option value="2">2대</option>
-						<option value="3">3대</option>
-						<option value="4">4대</option>
-						<option value="5">5대</option>						
-					</select>
-				</td>
-			</tr>
-			
-	6. CarOption.jsp 페이지 화면에서  추가로 옵션을 선택하고  최종계산 요청을 하면 요청을 받아 처리 하는 서블릿 
-	
-	7. Top.jsp 페이지 상단 메뉴 중... 아래의 <a>의 예약확인 을 클릭했을떄  
-	     예약당시 입력했던 비회원 핸드폰번호, 비밀번호를 입력하여 예약확인을 요청하는 디자인 VIEW 요청을 받아 처리하는 서블릿
+//           /Car/CarOptionResult.do
 
-			<a href="<%=contextPath%>/Car/cc?center=CarReserveConfirm.jsp">
-				<div style="font-size: 2.5rem; color:white; text-decoration: none;">예약확인</div>
-			</a>
-*/
-/*<a class="nav-link"
-href="<%=contextPath %>/Car/bb?center=CarReservation.jsp">
- <%-- 화면에 그대로 보이는 글자: "예약하기" --%>
- 예약하기
-</a>*/
-			 
+// 			  /Car/CarOrder.do
+	
+//            /Car/CarList.do
+
+//            /Car/cc
+
+//            /Car/bb
+
+//            /Car/carcategory.do?carcategory=Small
+
+//            /Car/update.do
+
+//           /Car/updatePro.do
 @WebServlet("/Car/*")
 public class CarController extends BaseController {
 
@@ -104,17 +58,6 @@ public class CarController extends BaseController {
 	//직렬화 버전 번호 (HttpServlet이 Serializable을 구현하므로 경고 방지용으로 선언)
 	private static final long serialVersionUID = 1L;
 
-	/*
-	 [3단계 변경] CarDAO 를 직접 들고 있던 것을 CarService 로 바꿨다.
-
-	   기존 구조만 예외적으로 Service 계층이 없어서
-	   컨트롤러가 DAO를 직접 호출하고, 금액 계산 같은 업무 규칙도 여기에 섞여 있었다.
-
-	       (이전)  CarController ----------------> CarDAO
-	       (지금)  CarController -> CarService -> CarDAO      <- 다른 도메인과 동일
-
-	   (transient : 서블릿 직렬화 대상에서 제외 - init()에서 다시 생성되므로 저장할 필요 없음)
-	*/
 	private transient CarService carService;
 
 	@Override   // 부모(HttpServlet)의 init 을 덮어쓴다는 표시
@@ -132,17 +75,24 @@ public class CarController extends BaseController {
 		response.setCharacterEncoding("UTF-8");   // 응답 글자를 UTF-8 로 내보낸다 (안 하면 한글이 깨진다)
 		PrintWriter out = response.getWriter();   // 응답에 글자를 쓸 수 있는 붓을 얻는다
 		 		
-		//1. 클라이언트가 요청한 전체 URL 중에서 2단계 주소 얻기 
-		String action = request.getPathInfo(); 
-		// "/Main"<- CarMain.jsp(VIEW) 메인화면 2단계 요청 주소 얻기
-		// "/bb" <- 예약하기 메뉴를 클릭 했을때  전체 검색 또는 카테고리별 검색 VIEW 화면 2단계 요청주소 얻기
-		// "/CarList.do" <- 전체 차량 검색  2단계 요청 주소 얻기 
+		//1. 클라이언트가 요청한 전체 URL  중에서 2단계 주소  얻기 
+		String action = request.getPathInfo();     
+			
+		// "/updatePro.do" <- 예약 수정  2단계 요청 주소 얻기 
+		
+		// "/update.do"  <- 예약 수정 화면(중앙화면 CarConfirmUpdate.jsp VIEW) 2단계 요청 주소 얻기 		
 		// "/carcategory.do" <- 차량 유형별 선택 후 검색 2단계 요청 주소 얻기
+		// "/bb" <- 예약하기 메뉴를 클릭 했을때  전체 검색 또는 카테고리별 검색 VIEW 화면 2단계 요청주소 얻기		
+		// "/CarReserveConfirm.do" <- 비회원 예약 내역 조회 2단계 요청 주소 얻기 		
+		// "/cc"  <- 예약 확인 하기 위해 예약당시 입력 했던 비회원 핸드폰번호, 비밀번호를 입력하여 예약확인 요청하는 디자인 VIEW 2단계 요청주소얻기
+		// "/Main"<- CarMain.jsp(VIEW) 메인화면 2단계 요청 주소 얻기
+		// "/CarList.do" <- 전체 차량 검색  2단계 요청 주소 얻기 		
 		// "/CarInfo.do"     <- 차량 한대 정보 검색 2단계 요청 주소 얻기
 		// "/CarOption.do"   <- 차량 렌트 예약을 위해  옵션을 추가로 선택할수 있는 화면 2단계 요청 주소 얻기
 		// "/CarOptionResult.do" <- 차량 렌트 예약을 위해 추가한 옵션금액 + 기본 금액 계산 2단계 요청 주소 얻기 
 		// "/CarOrder.do" <-  비회원 결제후 예약 요청 2단계 주소 얻기 
-		// "/cc"          <- 예약 확인 하기 위해 예약당시 입력 했던 비회원 핸드폰번호, 비밀번호를 입력하여 예약확인 요청하는 디자인 VIEW 2단계 요청주소얻기
+		
+	
 		// "/delete.do"   <- 예약 취소를 위해 비밀번호를 입력해서 예위취소 요청하는 VIEW 중앙 화면 Delete.jsp보여줘~ 2단계 요청 주소 얻기
 		// "/deletePro.do" <- 예약 취소 요청하는 2단계 요청 주소 얻기 
 											
@@ -169,14 +119,14 @@ public class CarController extends BaseController {
 			nextPage = "/CarMain.jsp";   // 틀이 되는 CarMain.jsp 로 넘긴다
 
 		}else if(action.equals("/bb")) {//<- 예약하기 메뉴 링크 클릭시 보여질 중앙화면
+			
 			//   Car/bb?center=CarReservation.jsp
 			
 			//2.1. 중앙화면 요청한 파라미터 얻기
 			String center = request.getParameter("center");
+			System.out.println("center = " + center);
 			
 			//2.2. request 내장객체 메모리에 "CarReservation.jsp"중앙화면경로 바인딩
-			//[보안] CenterView 허용 목록에 등록된 화면만 통과시킨다.
-			//       (기존에는 ?center=WEB-INF/web.xml 로 서버 파일 내용이 화면에 노출됐다)
 			request.setAttribute("center", center);
 			
 			//2.3. 메인 화면 CarMain.jsp를 포워딩 하기 위해 경로 저장
@@ -202,25 +152,28 @@ public class CarController extends BaseController {
 			
 		}else if(action.equals("/carcategory.do")) {//소형, 중형, 대형 중 선택한 유형의 차량 검색 요청이 들어 오면
 			
-			//2.1. 클라이언트가 요청한 소형, 중형, 대형중  선택한 하나의 <option>의 value속성값 얻기 
+			//2.1. 클라이언트가 요청한 소형, 중형, 대형중  클릭한 <a> 의 값 얻기  
 			/*
-			소형을 선택하고 검색요청 버튼을 클릭하면?
+			소형을 <a>클릭하고 검색요청 버튼을 클릭하면?
 					/Car/carcategory.do?carcategory=Small
 					 
-				중형을 선택하고 검색요청 버튼을 클릭하면?
+			중형을 <a>클릭하고 검색요청 버튼을 클릭하면?
 					/Car/carcategory.do?carcategory=Mid
 
-				대형을 선택하고 검색요청 버튼을 클릭하면?
+			대형을 <a>클릭하고 검색요청 버튼을 클릭하면?
 					/Car/carcategory.do?carcategory=Big
 			*/
 			String category = request.getParameter("carcategory");
+			//      Small  
 			
-			//2.1.1. 클라이언트가 선택한 유형의 차량 조회를 부장(CarService)에게 시킨다
-			List<CarListVo> vector = carService.getCarsByCategory( category );
+			//2.1.1. 클라이언트가 선택한 유형의 차량 조회를 부장(CarService)에게 시킨다			
+			List<CarListVo> list = carService.getCarsByCategory( category );
 			
+			//2.1.2. ArrayList<CarListVo객체들>(); 배열(Model을) 반환 받는다.
+					
 			//2.2. View (CarList.jsp) 중앙화면에  검색된 전체 차량 정보를 보여주기 위해 
-			//     request 내장객체에  Vector배열을 바인딩 
-			request.setAttribute("v", vector);
+			//     request 내장객체에  ArrayList배열을 바인딩 
+			request.setAttribute("v", list);
 			
 			//2.2.1 View (CarList.jsp) 중앙화면 주소 또한
 			//     request 내장객체에 바인딩 
@@ -228,18 +181,10 @@ public class CarController extends BaseController {
 			
 			//2.3. 메인 화면 CarMain.jsp를 포워딩 하기 위해 경로 저장
 			nextPage = "/CarMain.jsp";
-			
-			
+					
 		}else if(action.equals("/CarInfo.do")) {//렌트 하기 위한 차량을 보여주기 위해 차량 한대 검색요청을 받았을떄..
 			
 			//2.1. 검색시 사용할 차번호 얻기
-			/*
-			<a href="${contextPath}/Car/CarInfo.do?carno=${vo.carno}">
-				<img src="${contextPath}/img/${vo.carimg}" width="220" height="180"/><br>
-				차량명 : ${vo.carname}<br>
-				한대당 렌트 가격 : ${vo.carprice}
-			</a>
-			*/
 			/*
 			 [변경] Integer.parseInt(request.getParameter(...)) -> ParamUtil.getRequiredInt(...)
 
@@ -265,36 +210,16 @@ public class CarController extends BaseController {
 		
 		}else if(action.equals("/CarOption.do")) {//추가로 옵션을 선택할수 있는 화면 요청을 받았을때
 
-			/*
-			 [6단계 추가] 옵션 요금 단가를 화면으로 내려보낸다.
+			request.setAttribute("priceInsurance", CarService.PRICE_INSURANCE);// 자차 보험 1일 요금 10000 request 에 바인딩 
+			request.setAttribute("priceWifi",      CarService.PRICE_WIFI); // 무선 WIFI 1일 요금 5000 request 에 바인딩 
+			request.setAttribute("priceNavi",      CarService.PRICE_NAVI); // 네비게이션 1일 요금 3000 request 에 바인딩 
+			request.setAttribute("priceBabyseat",  CarService.PRICE_BABYSEAT);// 베이비시트 1일 요금 10000 request 에 바인딩 
 
-			   왜 필요한가 - 화면과 서버의 금액이 서로 달랐다.
-
-			     기존 CarOption.jsp 에 이렇게 적혀 있었다.
-			         <option value="1">적용(1일 1만원)</option>   <- 무선 WiFi (실제 5,000원)
-			         <option value="1">적용(무료)</option>         <- 네비게이션 (실제 3,000원)
-
-			     즉 WiFi 는 요금을 2배로 안내하고,
-			     네비게이션은 "무료"라고 안내하면서 실제로는 3,000원을 청구했다.
-			     화면의 안내문과 실제 결제금액이 다르면 실서비스에서는 분쟁 사유가 된다.
-
-			   원인은 "같은 숫자를 화면과 서버에 각각 적어둔 것"이다.
-			   한쪽만 고치면 조용히 어긋난다.
-
-			   그래서 CarService 의 상수를 유일한 기준으로 삼고,
-			   화면은 그 값을 받아서 표시하도록 바꿨다.
-			   앞으로 요금이 바뀌면 CarService 만 고치면 화면도 함께 바뀐다.
-			*/
-			request.setAttribute("priceInsurance", CarService.PRICE_INSURANCE);
-			request.setAttribute("priceWifi",      CarService.PRICE_WIFI);   // WiFi 요금도 화면이 꺼내 쓸 수 있게 담는다
-			request.setAttribute("priceNavi",      CarService.PRICE_NAVI);   // 네비게이션 요금도 담는다
-			request.setAttribute("priceBabyseat",  CarService.PRICE_BABYSEAT);   // 베이비시트 요금도 담는다
-
-			//2.2.1. View(CarOption.jsp)중앙화면 주소를
-			//       request내장객체 메모리 영역에 바인딩
+			//View(CarOption.jsp) 추가로 옵션을 선택할수 있는 중앙화면 주소를
+			//request 내장객체 메모리 영역에 바인딩
 			request.setAttribute("center", "CarOption.jsp");
 
-			//2.3. 메인화면(CarMain.jsp)를 포워딩하기 위해 경로 저장
+			//메인화면(CarMain.jsp)를 포워딩하기 위해 경로 저장
 			nextPage = "/CarMain.jsp";
 
 			
@@ -305,6 +230,7 @@ public class CarController extends BaseController {
 			int carno = Integer.parseInt(request.getParameter("carno")); //차번호
 			String carbegindate = request.getParameter("carbegindate");  //차 대여일
 			int carqty = Integer.parseInt(request.getParameter("carqty")); //렌트할 차 수량
+						
 			/* [정리] carprice 파라미터를 더 이상 읽지 않는다.
 			   금액은 아래에서 DB 요금으로 다시 계산하므로 화면이 보낸 가격은 쓸 일이 없다.
 			   쓰지도 않을 값을 Integer.parseInt 하면, 값이 빠졌을 때 이유 없이 500 에러만 난다. */
@@ -320,13 +246,6 @@ public class CarController extends BaseController {
 			
 			//2.2.1. 차량 기본 금액 계산 = 대여수량 * 차 한대당 렌트 가격 * 대여기간
 			/*
-			 [보안 수정] 금액을 화면이 보낸 값으로 계산하지 않는다.
-
-			   기존 : carprice 를 hidden 파라미터로 받아 그대로 곱했다.
-			          <input type="hidden" name="carprice" value="150000">
-			          -> 개발자도구로 value 를 1 로 바꿔 보내면
-			             제네시스를 1일 1원에 예약할 수 있었다.
-
 			   지금 : 차량번호로 DB에서 1일 요금을 다시 조회해 계산한다.
 			          "돈과 관련된 값은 절대 화면에서 받지 않는다"가 원칙이다.
 			*/
@@ -341,23 +260,10 @@ public class CarController extends BaseController {
 			calcVo.setCarnave(carnave);   // 네비게이션 선택 여부
 			calcVo.setCarbabyseat(carbabyseat);   // 베이비시트 선택 여부
 
-			//차량 기본 금액 = 1일 요금 x 대여수량 x 대여기간
+			//차량 기본 금액
 			int totalreserve = carService.getBasePrice(priceCar.getCarprice(), calcVo);
 			
-			//2.2.2. 추가한 옵션 금액 계산
-			/*
-			 [버그 수정] 옵션 금액 계산
-
-			   기존 : (carins + carwifi + carbabyseat) * carreserveday * 10000 * carqty
-
-			     버그1. carnave(네비게이션)가 빠져 있다 -> 선택해도 요금이 0원이었다
-			     버그2. 옵션 단가를 모두 10,000원으로 계산했다
-			            AI 챗봇 안내는 보험 10,000 / WiFi 5,000 / 네비 3,000 / 시트 10,000 이라
-			            안내 금액과 실제 결제 금액이 달랐다 (WiFi는 5,000원 과다 청구)
-
-			   지금 : CarService 의 옵션 단가 상수를 사용한다.
-			          챗봇 프롬프트도 같은 상수를 참조하므로 안내와 결제가 항상 일치한다.
-			*/
+			//추가한 옵션 금액 계산
 			int totalOption = carService.getOptionPrice(calcVo);
 			
 			//2.2.3. 응답할 VIEW(CarOrder.jsp) 중앙 화면에 보여주기 위해 CarOrderVO객체를 생성해서 각 인스턴스변수에 저장 시킴
@@ -393,8 +299,7 @@ public class CarController extends BaseController {
 			 }
 		//5.  메인화면(CarMain.jsp)를 포워딩 하기 위해 경로 저장
 			 nextPage = "/CarMain.jsp";
-			
-			 
+					 
 		}else if(action.equals("/CarOrder.do")) {//결제 후 예약 요청을 받았을때....
 			
 			//2.1. 렌트 예약을 위해 선택했던 예약  정보 10개 중 8개 모두 얻어 저장
@@ -460,14 +365,6 @@ public class CarController extends BaseController {
 			//3.1. 예약시 선택했던 정보를  데이터베이스의 non_carorder테이블에 추가 하기 위해  CarDAO객체의 insertCarOrder메소드 호출해서 명령!
 			//참고. insertCarOrder메소드 호출시! 매개변수로  CarOderVo객체 전달, 매개변수로 HttpSession객체 전달
 			/*
-			 [변경] 예약 등록을 부장(CarService)에게 시킨다.
-
-			   기존 : cardao.insertCarOrder(carordervo, session);
-			     - 반환형이 void 라서 예약 실패를 알 수 없었다
-			       -> INSERT가 실패해도 화면에는 "예약되었습니다"가 떴다
-			     - session 을 넘겨받지만 DAO 안에서 쓰지 않았다
-			     - 결제 금액을 저장하지 않았다
-
 			   지금 : Service가 차량 요금을 DB에서 조회해 총액을 계산하고 함께 저장하며,
 			          성공 여부를 돌려준다.
 			*/
@@ -478,7 +375,7 @@ public class CarController extends BaseController {
 				out.print(" window.alert('예약 처리에 실패했습니다. 다시 시도해주세요.');");   // 실패를 알린다
 				out.print(" history.back();");   // 이전 화면으로 되돌린다 (입력한 값이 살아 있다)
 				out.print("</script>");   // 스크립트를 닫는다
-				return;   // 여기서 끝낸다
+				return;   // doHandle메소드 종료 (여기서 끝낸다)
 			}
 			
 			//4. 예약에 성공 했으면? 클라이언트의 브라우저로 예약 성공! 출력! 
@@ -492,6 +389,7 @@ public class CarController extends BaseController {
 		
 		
 		}else if(action.equals("/cc")) {// 예약 확인을 요청하는 디자인 중앙 VIEW 요청을 받았을떄..
+			
 			//URL ->  /Car/cc?center=CarReserveConfirm.jsp
 
 			//2.1. 요청한 중앙 VIEW 경로 얻기
@@ -499,8 +397,6 @@ public class CarController extends BaseController {
 			//     center = "CarReserveConfirm.jsp";
 
 			//2.2. request내장객체 메모리에 요청한 중앙 VIEW "CarReserveConfirm.jsp" 경로 바인딩
-			//[보안] CenterView 허용 목록에 등록된 화면만 통과시킨다.
-			//       (기존에는 ?center=WEB-INF/web.xml 로 서버 파일 내용이 화면에 노출됐다)
 			request.setAttribute("center", center);
 
 			//3. 메인 화면 포워딩 할 주소 저장
@@ -670,12 +566,12 @@ public class CarController extends BaseController {
 			
 			//2.2. 입력한 핸드폰번호와 비밀번호를 이용해 예약한 정보들을 조회 하기 위해 CarDAO객체의 getAllCarOrder메소드 호출해 명령!
 			//참고.  getAllCarOrder메소드를 호출할때 매개변수로 각각 입력한 핸드폰번호와 비밀번호 전달 !
-			//참고2. getAllCarOrder메소드 내부에서  조회된 예약 정보들을 Vector배열에 담아 Vector배열 자체를 반환 해줍니다!
-			List<CarConfirmVo> vector = carService.findOrders(memberphone, memberpass);
+			//참고2. getAllCarOrder메소드 내부에서  조회된 예약 정보들을 ArrayList배열에 담아 ArrayList배열 자체를 반환 해줍니다!
+			List<CarConfirmVo> arrayList = carService.findOrders(memberphone, memberpass);
 			
 			//2.2.3. 조회된 예약정보들을 중앙 VIEW(CarReserveResult.jsp)에 보여주기 위해
-			//       먼저~  request 내장객체 메모리에  Vector배열 자체를 바인딩
-			request.setAttribute("v", vector);
+			//       먼저~  request 내장객체 메모리에  ArrayList<CarConfirmVo>배열 자체를 바인딩
+			request.setAttribute("v", arrayList);
 			
 			//2.2.4. 조회된 예약정보들을 중앙 VIEW(CarReserveResult.jsp)에 보여주기 위해 
 			//       request 내장객체 멤보리에 VIEW주소 바인딩
@@ -683,23 +579,13 @@ public class CarController extends BaseController {
 			
 			//2.2.5. 중앙 VIEW페이지에 보여질 예약 수정 <a>, 예약삭제 <a>에 설정을 위해 입력한 휴대폰 번호와 비밀번호 함께 request내장객체 메모리에 바인딩
 			request.setAttribute("memberphone", memberphone);
-			/* [보안] 입력받은 예약 비밀번호를 request 에 담지 않는다.
-			   기존에는 화면(CarReserveResult.jsp)이 이 값을 hidden 필드에 심어
-			   "페이지 소스 보기"로 평문 비밀번호가 보였다.
-			   수정/취소 화면에서 사용자가 직접 다시 입력하므로 넘길 필요가 없다. */		
+			
 			//3. 메인 화면 포워딩 할 주소 저장
 			nextPage = "/CarMain.jsp";
 				
 		}else if(action.equals("/update.do")) {//예약 정보를 수정하기 위해 예약한 아이디로 예약정보 조회 요청을 받았을때...
 			/*
 			 CarReserveResult.jsp 의 "예약 수정" 버튼으로 요청이 들어온다.
-
-			   (기존 코드 - GET 링크)
-			       <a href="${contextPath}/Car/update.do"
-			               + "?orderid=${carConfirmVo.orderid}"
-			               + "&carimg=${carConfirmVo.carimg}"
-			               + "&memberpass=${requestScope.memberpass}"     <- 비밀번호가 주소창에!
-			               + "&memberphone=${requestScope.memberphone}">예약수정</a>
 
 			   (지금 - POST 폼)
 			       <form action="${contextPath}/Car/update.do" method="post">
@@ -716,9 +602,9 @@ public class CarController extends BaseController {
 			String carimg = request.getParameter("carimg"); //예약한 차량 이미지명
 
 			//2.2. 예약 아이디를 이용해 예약한 정보 한쌍을 DB에서 조회 하기 위해 
-			//     CarDAO객체의 getOneOrder메소드를 호출할때.. 매개변수로 orderid예약 아이디 전달해서 조회해 옵니다.
-			//없는 예약번호면 CarService가 404 예외를 던진다 (기존에는 null -> NPE 500)
-			CarConfirmVo carConfirmVo = carService.findOrder(orderid);
+			//     CarService객체의 findOrder메소드를 호출할때.. 매개변수로 orderid예약 아이디 전달해서 조회해 옵니다.
+			//     만약 없는 예약번호면 CarService가 404 예외를 던진다 (기존에는 null -> NPE 500)
+			CarConfirmVo carConfirmVo = carService.findOrder(orderid);	
 						 carConfirmVo.setCarimg(carimg); //추가로  예약한 차량 이미지명 저장 
 				
 			//2.3. 예약 아이디를 이요해 조회된 예약 정보를 보여줄 중앙화면 VIEW("CarConfirmUpdate.jsp")주소 request에 바인딩
@@ -731,22 +617,13 @@ public class CarController extends BaseController {
 			nextPage = "/CarMain.jsp";	
 			
 			
-		}else if(action.equals("/updatePro.do")) { //입력한 정보를 DB의 테이블에 수정(UPDATE)해 주세요 요청을 받았을때
-			
-			System.out.println( request.getParameter("carins")  + "-------------------");   // 보험 값이 무엇으로 들어왔는지 콘솔에 찍는다 (수업 중 확인용)
-			
-			//2.1. 수정을 위해 입력한 정보들은  request내장객체 메모리 영역에 저장되어 있으므로
+		}else if(action.equals("/updatePro.do")) { //수정을 위해 입력한 정보를 DB의 테이블에 수정(UPDATE)해 주세요 요청을 받았을때
+		
+			//2.1. 수정을 위해 입력한 정보들은  request 내장객체 메모리 영역에 저장되어 있으므로
 			//     DB의 non_carorder테이블의 컬럼 정보를 update수정하기 위해 
-			//     CarDAO객체의 carOrderUpdate메소드를 호출 해 수정 명령 합니다.
+			//     CarService의 메소드로 명령하고  CarDAO객체의 carOrderUpdate메소드를 호출 해 수정 명령 합니다.
 			/*
-			 [계층 분리] DAO에 request 를 그대로 넘기던 것을 고쳤다.
-
-			   기존 : cardao.carOrderUpdate(request);
-			          -> DAO 안에서 request.getParameter(...) 와 Integer.parseInt(...) 를 했다.
-			             DAO가 HTTP를 알게 되어 재사용이 불가능하고,
-			             잘못된 입력이 SQL 오류로 나타났다.
-
-			   지금 : 컨트롤러가 값을 꺼내 검증하고 VO로 만들어 Service에 넘긴다.
+			   지금 : 컨트롤러가 값을 꺼내 검증하고 VO로 만들어 CarService에 넘긴다.
 			          ParamUtil 이 형식과 범위(수량 1~5, 기간 1~30)를 서버에서 강제한다.
 			          화면의 select 태그만 믿으면 주소창으로 얼마든지 바꿔 보낼 수 있다.
 			*/
@@ -761,7 +638,7 @@ public class CarController extends BaseController {
 			updateVo.setCarbabyseat(ParamUtil.getFlag(request, "carbabyseat"));   // 베이비시트 선택 여부
 			updateVo.setMemberpass(ParamUtil.getRequiredString(request, "memberpass"));   // 본인 확인용 비밀번호. 없으면 여기서 400 예외가 난다
 
-			int result = carService.updateOrder(updateVo);   // 검증과 재계산까지 Service 가 하고 바뀐 행 수를 돌려준다
+			int result = carService.updateOrder(updateVo);   // 검증과 재계산까지 CarService 가 하고 바뀐 행 수를 돌려준다
 			
 			String memberphone = request.getParameter("memberphone");//예약시 입력했던 비회원 휴대폰번호
 			
@@ -770,27 +647,7 @@ public class CarController extends BaseController {
 			//     -> "예약정보 수정하기 위해 요청하는 디자인 화면 "-> /Car/update.do 포워딩 해서 보여지게 하기 
 			//	   -> return; <-을 작성해서  doHandle메소드 종료 
 			if(result == 1) {
-				/*
-				 ============================================================================
-				   [수정 2가지]
 
-				   (기존 코드)
-				       location.href='/Car/update.do?orderid=3&carimg=k5.jpg&memberphone=010-...'
-
-				   문제1. 연락처가 주소(URL)에 실려 나갔다.
-				          주소창에 담긴 값은 브라우저 기록과 서버 접속 로그에 남는다.
-				          개인정보를 이런 곳에 남기지 않는다.
-
-				   문제2. 수정에 성공했는데 "수정 화면으로 다시" 보냈다.
-				          사용자는 방금 저장한 화면을 또 보게 되어
-				          "저장이 된 것인지" 확신할 수 없었다.
-
-				   (지금)
-				     수정된 결과가 반영된 예약 목록으로 보내고, 완료 메시지를 함께 보여준다.
-				     주소로 다시 요청하지 않고 서버 안에서 조회 후 포워딩하므로
-				     비밀번호와 연락처가 주소창에 나타나지 않는다.
-				 ============================================================================
-				*/
 				String updatedPass = updateVo.getMemberpass();
 
 				List<CarConfirmVo> updatedOrders = carService.findOrders(memberphone, updatedPass);   // 수정된 결과가 반영된 예약 목록을 다시 조회한다
@@ -808,11 +665,11 @@ public class CarController extends BaseController {
 			//	   -> history객체의 back(); 메소드를 호출해서  이전 페이지로 되돌아가 보여지게 하기 
 			//     -> return; <-을 작성해서 doHandle메소드 종료 	
 			}else {
-				out.print("<script>");   // 브라우저가 실행할 스크립트를 만들어 보낸다
-				out.print(" alert('예약 정보 수정 실패');");   // 실패를 알린다
-				out.print(" history.back();");   // 이전 화면으로 되돌린다
-				out.print("</script>");   // 스크립트를 닫는다
-				return;   // 여기서 끝낸다
+				out.print("<script>");  
+				out.print(" alert('예약 정보 수정 실패');");   // 수정 실패를 알린다
+				out.print(" history.back();");   // 이전 화면 CarConfirmUpdate.jsp 으로 되돌린다
+				out.print("</script>");  
+				return;   // 여기서 끝낸다  doHandle 메소드 종료 
 			}
 			
 		}else if(action.equals("/delete.do")) {//예약 취소(삭제)를 위해 비밀번호를 입력하여 취소 요청하는 중앙 VIEW화면 요청을 받았을떄
