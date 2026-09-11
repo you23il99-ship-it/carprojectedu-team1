@@ -88,7 +88,11 @@ import util.ParamUtil;   // 여러 곳에서 함께 쓰는 도우미 클래스
 				<div style="font-size: 2.5rem; color:white; text-decoration: none;">예약확인</div>
 			</a>
 */
-
+/*<a class="nav-link"
+href="<%=contextPath %>/Car/bb?center=CarReservation.jsp">
+ <%-- 화면에 그대로 보이는 글자: "예약하기" --%>
+ 예약하기
+</a>*/
 			 
 @WebServlet("/Car/*")
 public class CarController extends BaseController {

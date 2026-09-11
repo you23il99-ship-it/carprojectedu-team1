@@ -1,21 +1,7 @@
  <%-- 이 페이지의 글자 인코딩을 UTF-8 로 정한다. 빠뜨리면 한글이 깨진다 --%>
  <%@ page language="java" contentType="text/html; charset=UTF-8"
     pageEncoding="UTF-8"%>
-<%--
- [5단계 변경] 여기 있던 CSS <link> 를 제거했다.
-   (제거된 코드)
-     cdn.jsdelivr.net 의 bootstrap 4.6.2 css 를 link 태그로 불러오던 한 줄
-   제거한 이유 2가지
-     1) 외부 서버(CDN)에 의존했다
-        사내망이나 인터넷이 없는 강의실에서는 이 파일을 못 받아와
-        화면 전체 레이아웃이 깨졌다.
-        프로젝트 안에 이미 같은 파일(css/bootstrap.min.css)이 있었는데도 쓰지 않고 있었다.
-     2) 이 파일은 이제 "조각(fragment)"이다
-        Top.jsp 는 CarMain.jsp 안에 include 되므로, 여기에 <link> 를 쓰면
-        <body> 안에 스타일시트가 들어간다.
-        스타일이 언제 적용되는지 예측할 수 없고, 화면이 한 번 깜빡이는 원인이 된다.
-   CSS 는 이제 문서 주인인 CarMain.jsp 의 <head> 에서 한 번만 불러온다.
---%>
+
 <style>
 /* =============================================
    [전체 폰트 기본 크기] - 반응형 폰트 설정
@@ -47,15 +33,10 @@ header.site-header {
     /* 요소 사이 간격 8px */
     gap: 8px;
 }
-/* =============================================
-   [상단 로그인/버튼 영역] - flexbox 정렬
-   ============================================= */
+
 #login {
-    /* 요소를 어떤 방식으로 배치할지 flex */
     display: flex;
-    /* 세로 방향 정렬 center */
     align-items: center;
-    /* 줄바꿈 허용 wrap */
     flex-wrap: wrap;
     /* 요소 사이 간격 6px */
     gap: 6px;
@@ -102,19 +83,7 @@ header.site-header {
     /* 밑줄 같은 글자 장식 none */
     text-decoration: none;
 }
-/*
-  [터치 타깃 규격 - 6단계 반응형 기준]
-    손가락으로 누르는 화면에서는 버튼이 최소 44x44px 이어야 한다.
-    (애플 휴먼 인터페이스 가이드라인, 구글 머티리얼 디자인이 같은 값을 권한다)
-    padding: 5px 14px 만으로는 높이가 30px 밖에 안 된다.
-    마우스로는 문제없지만 스마트폰에서는 옆 버튼을 잘못 누르게 된다.
-    데스크톱에서 헤더가 불필요하게 두꺼워지지 않도록 세 조건 중 하나만 맞으면 적용한다.
-    - hover: none        -> 손가락으로 쓰는 기기 (스마트폰, 태블릿)
-    - pointer: coarse    -> 정밀하지 않은 포인터
-    - max-width: 767px   -> 좁은 화면 (기기 종류를 못 알아내는 브라우저 대비)
-    앞의 두 조건만 쓰면 마우스가 달린 노트북에서 창을 좁혔을 때는 적용되지 않는다.
-    폭 조건을 함께 넣으면 어떤 환경에서든 좁은 화면에서 44px 가 보장된다.
-*/
+
 @media (hover: none), (pointer: coarse), (max-width: 767px) {
     /* id="login" 인 요소 하나의 모양을 정한다 */
     #login .top-btn {
@@ -592,6 +561,7 @@ header.site-header {
             <!-- 예약하기 메뉴 -->
             <li class="nav-item flex-fill text-center">
                 <%-- 다른 화면으로 넘어가는 링크 --%>
+                <!--예약클릭 서블릿으로 예약화면으로 이동  -->
                 <a class="nav-link"
                    href="<%=contextPath %>/Car/bb?center=CarReservation.jsp">
                     <%-- 화면에 그대로 보이는 글자: "예약하기" --%>

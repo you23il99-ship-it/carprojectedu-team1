@@ -100,7 +100,7 @@
 }
 </style>
 </head>
-<%-- 실제로 보이는 내용 구역 --%>
+<%-- 실제로 보이는 메인화면 내용 구역 --%>
 <body>
 <%--
 	모델 2 개발방식
@@ -113,6 +113,12 @@
  <c:if test="${center == null}">
  	<%-- 화면에서만 쓸 임시 값 center 을 만든다 --%>
  	<c:set var="center" value="Center.jsp" />
+ 	<%//2.3. 예약 아이디를 이요해 조회된 예약 정보를 보여줄 중앙화면 VIEW("CarConfirmUpdate.jsp")주소 request에 바인딩
+			request.setAttribute("center", "CarConfirmUpdate.jsp");
+			
+			//2.4.    2.2.에서 조회된 예약한 정보(CarConfirmVo)를 중앙 VIEW에 보여주기 위해 request에 바인딩
+			request.setAttribute("vo", carConfirmVo);
+			  %>
  </c:if>
 <%-- 반응형 전체 감싸는 영역 (table 레이아웃 → div 레이아웃으로 변환) --%>
 <div class="main-wrapper">
