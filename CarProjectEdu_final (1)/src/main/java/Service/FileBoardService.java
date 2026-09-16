@@ -776,7 +776,7 @@ public class FileBoardService {
 			}
 
 			boarddao.shiftGroupsGreaterThan(con, groupLevel[0]);   // 원글보다 뒤에 있는 글들의 그룹번호를 한 칸 민다 (답글이 들어갈 자리를 만든다)
-
+			// 답변글 추가. 작성한 답글 정보DB의 테이블에 Insert추가
 			return boarddao.insertReply(con, reply_id, encodedPass, reply_name, reply_email,   // 만들어진 자리에 답글을 저장한다. 그룹은 원글과 같고 깊이는 한 단계 아래다
 										reply_title, reply_content,
 										groupLevel[0] + 1, groupLevel[1] + 1);

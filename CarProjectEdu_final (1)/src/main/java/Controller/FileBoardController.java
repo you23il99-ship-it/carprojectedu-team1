@@ -269,7 +269,7 @@ public class FileBoardController extends BaseController {
 				out.write(result);   // 결과 문구를 그대로 응답에 쓴다. 화면의 AJAX 가 이 글자를 보고 안내를 띄운다
 				return;
 			}
-
+			
 			//=============================================================
 			// 요청5. fileboardread.jsp 의 수정 버튼 클릭 -> 글 수정
 			//        요청 주소 : /FileBoard/updateBoard.do  (CarApp.postForm 이 POST 로 요청)

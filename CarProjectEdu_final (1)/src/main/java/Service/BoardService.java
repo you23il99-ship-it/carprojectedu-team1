@@ -261,30 +261,6 @@ public class BoardService {
 		return matchesBoardPassword(b_idx, password);   // 아래에 만들어 둔 공통 검증 메소드를 그대로 쓴다
 	}
 
-	//----------------------------------------------------------------
-	// serviceUpdateBoard : 게시글을 수정한다
-	//  사장의 "/updateBoard.do" 요청에서 부른다
-	//  반환값 -> "수정성공" / "수정실패" / "비밀번호틀림"
-	//----------------------------------------------------------------
-	/**
-	 * [처리 순서]
-	 *   1. 저장된 글 비밀번호를 꺼내 입력값과 비교한다
-	 *   2. 비교를 통과했을 때만 실제 수정(update)을 실행한다
-	 *   3. 비밀번호 검증과 수정을 하나의 트랜잭션으로 묶어, 검증 직후 다른
-	 *      요청이 끼어들어 값이 바뀌는 상황을 줄인다
-	 *
-	 * [권한 우회 취약점을 고친 부분]
-	 *   예전 버전의 이 메소드는 매개변수에 비밀번호가 아예 없었다. 비밀번호
-	 *   확인은 별도의 AJAX 요청(/Board/password.do)으로만 하고, 그 결과로
-	 *   화면의 [수정] 버튼을 보이거나 숨기는 방식이었다. 그래서 화면을
-	 *   거치지 않고 아래 요청을 그대로 보내면 비밀번호 없이도 수정이 됐다.
-	 *
-	 *       POST /CarProject/Board/updateBoard.do
-	 *       idx=1&title=바뀐제목&content=바뀐내용&email=a@a.com
-	 *
-	 *   화면에서 버튼을 숨기는 것은 사용자를 위한 "안내"일 뿐이고, 실제
-	 *   권한 검사는 반드시 서버(이 메소드)에서 해야 한다.
-	 */
 	public String serviceUpdateBoard(String idx_, String email_, String title_, String content_, String pass_) {
 
 		final int b_idx = parseIdx(idx_);   // 주소로 온 글번호를 숫자로 바꾼다

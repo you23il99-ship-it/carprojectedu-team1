@@ -100,7 +100,7 @@ public class CarService {
 	/** 전체 차량 목록 */
 	public List<CarListVo> getAllCars() {
 		return DBCPUtil.query(con -> cardao.selectAllCars(con));   // query = 조회 전용. 연결을 빌려 SQL 을 실행하고 자동으로 반납한다
-	}
+	}	
 
 	/** 유형별(Small/Mid/Big) 차량 목록 */
 	public List<CarListVo> getCarsByCategory(String category) {
